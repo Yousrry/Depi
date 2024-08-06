@@ -1,0 +1,31 @@
+# Stage 1: Build
+FROM python:latest AS builder
+
+WORKDIR /app
+
+# Copy only the requirements file to install dependencies
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the installed dependencies to a new directory
+RUN mkdir /install \
+    && cp -r /usr/local/lib/python3.*/site-packages /install
+
+# Stage 2: Runtime
+FROM python:3.10-alpine
+
+WORKDIR /app
+
+# Copy the dependencies from the builder stage
+COPY --from=builder /install /usr/local/lib/python3.*/site-packages
+
+# Copy the application code
+COPY hello.py .
+
+# Expose the necessary port
+EXPOSE 5000
+
+# Set the entry point
+CMD ["python", "hello.py"]
